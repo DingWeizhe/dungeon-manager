@@ -1,0 +1,156 @@
+post:
+  /setup:
+    tags:
+      - Authentication
+    summary: 設置 TOTP
+    description: 為當前用戶設置 TOTP 雙因素認證
+    security:
+      - BearerAuth: []
+    responses:
+      "200":
+        description: TOTP 設置成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secret:
+                  type: string
+                  description: TOTP 密鑰
+                  example: "JBSWY3DPEHPK3PXP"
+                qrCode:
+                  type: string
+                  description: QR 碼圖片（Base64 編碼）
+                  example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              statusCode: 401
+              message: "Unauthorized"
+              error: "Unauthorized"
+              translationKey: "auth.unauthorized"
+
+  /verify:
+    tags:
+      - Authentication
+    summary: 驗證 TOTP
+    description: 驗證用戶提供的 TOTP 碼
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                description: TOTP 驗證碼
+                example: "123456"
+    responses:
+      "200":
+        description: 驗證成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                verified:
+                  type: boolean
+                  description: 驗證結果
+                  example: true
+      "400":
+        description: 無效的驗證碼
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              statusCode: 400
+              message: "Invalid TOTP code"
+              error: "Bad Request"
+              translationKey: "auth.invalid_totp"
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              statusCode: 401
+              message: "Unauthorized"
+              error: "Unauthorized"
+              translationKey: "auth.unauthorized"
+      "429":
+        description: 請求過於頻繁
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              statusCode: 429
+              message: "Too many requests"
+              error: "Too Many Requests"
+              translationKey: "common.too_many_requests"
+
+  /disable:
+    tags:
+      - Authentication
+    summary: 禁用 TOTP
+    description: 為當前用戶禁用 TOTP 雙因素認證
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                description: 最後一次 TOTP 驗證碼
+                example: "123456"
+    responses:
+      "200":
+        description: TOTP 禁用成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                disabled:
+                  type: boolean
+                  description: 禁用結果
+                  example: true
+      "400":
+        description: 無效的驗證碼
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              statusCode: 400
+              message: "Invalid TOTP code"
+              error: "Bad Request"
+              translationKey: "auth.invalid_totp"
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              statusCode: 401
+              message: "Unauthorized"
+              error: "Unauthorized"
+              translationKey: "auth.unauthorized"

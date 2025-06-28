@@ -1,0 +1,78 @@
+get:
+  tags:
+    - Authentication
+  summary: 發起 Google 登入
+  description: 重定向到 Google 登入頁面
+  security:
+    - GoogleAuth:
+        - email
+        - profile
+  responses:
+    "302":
+      description: 重定向到 Google 登入頁面
+      headers:
+        Location:
+          schema:
+            type: string
+            example: "https://accounts.google.com/o/oauth2/v2/auth?client_id=your-client-id&redirect_uri=http://localhost:3000/api/auth/google/callback&response_type=code&scope=email%20profile"
+
+post:
+  /callback:
+    tags:
+      - Authentication
+    summary: Google 登入回調
+    description: 處理 Google OAuth 回調，創建或更新用戶並返回訪問令牌
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - code
+              - state
+            properties:
+              code:
+                type: string
+                description: Google 授權碼
+                example: "4/P7q-LW_ZYr29z7nUYdPGNYX6HYQo6zp6uaqm4..."
+              state:
+                type: string
+                description: 狀態參數，用於防止 CSRF 攻擊
+                example: "random_state_string"
+    responses:
+      "200":
+        description: 登入成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: JWT 訪問令牌
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                user:
+                  $ref: "#/components/schemas/User"
+      "400":
+        description: 無效的請求
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              statusCode: 400
+              message: "Invalid authorization code"
+              error: "Bad Request"
+              translationKey: "auth.invalid_code"
+      "401":
+        description: 認證失敗
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              statusCode: 401
+              message: "Google authentication failed"
+              error: "Unauthorized"
+              translationKey: "auth.google_failed"

@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: Dungeon Manager API
+  description: |
+    Dungeon Manager 是一個創新的系統運維管理平台，將傳統的運維工作轉化為地下城探險的形式。
+    系統採用前後端分離架構，使用 NestJS 作為後端框架，Vue 3 作為前端框架，PostgreSQL 作為資料庫。
+    系統完全開源，使用 MIT 授權，並支持多語言國際化。
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: 本地開發環境
+  - url: https://api.dungeon-manager.com/api
+    description: 生產環境
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    GoogleAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/v2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            email: 訪問用戶郵箱
+            profile: 訪問用戶資料
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          description: HTTP 狀態碼
+        message:
+          type: string
+          description: 錯誤信息
+        error:
+          type: string
+          description: 錯誤類型
+        translationKey:
+          type: string
+          description: 用於前端顯示的翻譯鍵
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: 當前頁碼
+        limit:
+          type: integer
+          description: 每頁數量
+        total:
+          type: integer
+          description: 總記錄數
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, guardian, member]
+        hasTotp:
+          type: boolean
+        language:
+          type: string
+        organizations:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationMember"
+
+    OrganizationMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          type: string
+          enum: [owner, admin, member]
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    $ref: "./auth/login.yaml"
+  /auth/google:
+    $ref: "./auth/google.yaml"
+  /auth/totp:
+    $ref: "./auth/totp.yaml"
+  /organizations:
+    $ref: "./organization/organizations.yaml"
+  /zones:
+    $ref: "./zone/zones.yaml"
+  /rooms:
+    $ref: "./room/rooms.yaml"
+  /guardians:
+    $ref: "./guardian/guardians.yaml"
+  /treasures:
+    $ref: "./treasure/treasures.yaml"
+  /parties:
+    $ref: "./party/parties.yaml"
+  /i18n:
+    $ref: "./i18n/i18n.yaml"
+
+tags:
+  - name: Authentication
+    description: 認證相關 API
+  - name: Organization
+    description: 組織管理 API
+  - name: Zone
+    description: 區域管理 API
+  - name: Room
+    description: 房間管理 API
+  - name: Guardian
+    description: 守護者管理 API
+  - name: Treasure
+    description: 寶箱管理 API
+  - name: Party
+    description: 隊伍管理 API
+  - name: I18n
+    description: 國際化 API

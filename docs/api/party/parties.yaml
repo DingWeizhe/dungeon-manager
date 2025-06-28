@@ -1,0 +1,580 @@
+get:
+  tags:
+    - Party
+  summary: 獲取團隊列表
+  description: 獲取指定組織內的團隊列表
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: organizationId
+      in: query
+      description: 組織 ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: page
+      in: query
+      description: 頁碼
+      required: false
+      schema:
+        type: integer
+        default: 1
+    - name: limit
+      in: query
+      description: 每頁數量
+      required: false
+      schema:
+        type: integer
+        default: 10
+  responses:
+    "200":
+      description: 成功獲取團隊列表
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    status:
+                      type: string
+                      enum: [active, inactive, disbanded]
+                    createdAt:
+                      type: string
+                      format: date-time
+                    updatedAt:
+                      type: string
+                      format: date-time
+                    members:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          userId:
+                            type: string
+                            format: uuid
+                          role:
+                            type: string
+                            enum: [leader, member]
+                          joinedAt:
+                            type: string
+                            format: date-time
+              $ref: "#/components/schemas/Pagination"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+post:
+  tags:
+    - Party
+  summary: 創建團隊
+  description: 在指定組織內創建新的團隊
+  security:
+    - BearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - organizationId
+            - name
+          properties:
+            organizationId:
+              type: string
+              format: uuid
+              description: 組織 ID
+            name:
+              type: string
+              description: 團隊名稱
+              example: "運維團隊"
+            description:
+              type: string
+              description: 團隊描述
+              example: "負責系統運維和監控"
+            settings:
+              type: object
+              properties:
+                maxMembers:
+                  type: integer
+                  description: 最大成員數
+                allowedRoles:
+                  type: array
+                  items:
+                    type: string
+                  description: 允許的角色列表
+                notificationEnabled:
+                  type: boolean
+                  description: 是否啟用通知
+  responses:
+    "201":
+      description: 團隊創建成功
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              settings:
+                type: object
+    "400":
+      description: 無效的請求
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+/{id}:
+  put:
+    tags:
+      - Party
+    summary: 更新團隊
+    description: 更新指定團隊的信息
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 團隊名稱
+              description:
+                type: string
+                description: 團隊描述
+              status:
+                type: string
+                enum: [active, inactive, disbanded]
+                description: 團隊狀態
+              settings:
+                type: object
+                properties:
+                  maxMembers:
+                    type: integer
+                  allowedRoles:
+                    type: array
+                    items:
+                      type: string
+                  notificationEnabled:
+                    type: boolean
+    responses:
+      "200":
+        description: 團隊更新成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                updatedAt:
+                  type: string
+                  format: date-time
+                settings:
+                  type: object
+      "400":
+        description: 無效的請求
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 團隊不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  delete:
+    tags:
+      - Party
+    summary: 刪除團隊
+    description: 刪除指定的團隊
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "204":
+        description: 團隊刪除成功
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 團隊不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  /members:
+    get:
+      tags:
+        - Party
+      summary: 獲取團隊成員列表
+      description: 獲取指定團隊的成員列表
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: 頁碼
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每頁數量
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: 成功獲取成員列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userId:
+                          type: string
+                          format: uuid
+                        role:
+                          type: string
+                          enum: [leader, member]
+                        joinedAt:
+                          type: string
+                          format: date-time
+                        user:
+                          $ref: "#/components/schemas/User"
+                  $ref: "#/components/schemas/Pagination"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 團隊不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      tags:
+        - Party
+      summary: 添加團隊成員
+      description: 向指定團隊添加新成員
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - role
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: 用戶 ID
+                role:
+                  type: string
+                  enum: [leader, member]
+                  description: 成員角色
+      responses:
+        "201":
+          description: 成員添加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    format: uuid
+                  role:
+                    type: string
+                  joinedAt:
+                    type: string
+                    format: date-time
+        "400":
+          description: 無效的請求
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 團隊不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    /{userId}:
+      delete:
+        tags:
+          - Party
+        summary: 移除團隊成員
+        description: 從指定團隊中移除成員
+        security:
+          - BearerAuth: []
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+              format: uuid
+          - name: userId
+            in: path
+            required: true
+            schema:
+              type: string
+              format: uuid
+        responses:
+          "204":
+            description: 成員移除成功
+          "401":
+            description: 未認證
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+          "403":
+            description: 權限不足
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+          "404":
+            description: 團隊或成員不存在
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+
+  /activities:
+    get:
+      tags:
+        - Party
+      summary: 獲取團隊活動日誌
+      description: 獲取指定團隊的活動日誌
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startTime
+          in: query
+          description: 開始時間
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          description: 結束時間
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          description: 頁碼
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每頁數量
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: 成功獲取活動日誌
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                          enum:
+                            [
+                              member_join,
+                              member_leave,
+                              role_change,
+                              setting_update,
+                            ]
+                        userId:
+                          type: string
+                          format: uuid
+                        details:
+                          type: object
+                        timestamp:
+                          type: string
+                          format: date-time
+                  $ref: "#/components/schemas/Pagination"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 團隊不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

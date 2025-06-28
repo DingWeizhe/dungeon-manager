@@ -1,0 +1,254 @@
+get:
+  tags:
+    - Organization
+  summary: 獲取組織列表
+  description: 獲取當前用戶有權訪問的組織列表
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: page
+      in: query
+      description: 頁碼
+      required: false
+      schema:
+        type: integer
+        default: 1
+    - name: limit
+      in: query
+      description: 每頁數量
+      required: false
+      schema:
+        type: integer
+        default: 10
+  responses:
+    "200":
+      description: 成功獲取組織列表
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    createdAt:
+                      type: string
+                      format: date-time
+                    memberCount:
+                      type: integer
+                    dungeonCount:
+                      type: integer
+                    role:
+                      type: string
+                      enum: [owner, admin, member]
+              $ref: "#/components/schemas/Pagination"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+post:
+  tags:
+    - Organization
+  summary: 創建組織
+  description: 創建一個新的組織
+  security:
+    - BearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              description: 組織名稱
+              example: "冒險者公會"
+            description:
+              type: string
+              description: 組織描述
+              example: "一個致力於探索地下城的公會"
+            settings:
+              type: object
+              properties:
+                defaultLanguage:
+                  type: string
+                  description: 默認語言
+                  example: "zh-TW"
+                timezone:
+                  type: string
+                  description: 時區
+                  example: "Asia/Taipei"
+                allowedDomains:
+                  type: array
+                  description: 允許的郵箱域名
+                  items:
+                    type: string
+                  example: ["example.com", "adventure.com"]
+  responses:
+    "201":
+      description: 組織創建成功
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              description:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              settings:
+                type: object
+    "400":
+      description: 無效的請求
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+put:
+  /{id}:
+    tags:
+      - Organization
+    summary: 更新組織
+    description: 更新指定組織的信息
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 組織名稱
+              description:
+                type: string
+                description: 組織描述
+              settings:
+                type: object
+                properties:
+                  defaultLanguage:
+                    type: string
+                  timezone:
+                    type: string
+                  allowedDomains:
+                    type: array
+                    items:
+                      type: string
+    responses:
+      "200":
+        description: 組織更新成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                description:
+                  type: string
+                updatedAt:
+                  type: string
+                  format: date-time
+                settings:
+                  type: object
+      "400":
+        description: 無效的請求
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 組織不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+delete:
+  /{id}:
+    tags:
+      - Organization
+    summary: 刪除組織
+    description: 刪除指定的組織
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "204":
+        description: 組織刪除成功
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 組織不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"

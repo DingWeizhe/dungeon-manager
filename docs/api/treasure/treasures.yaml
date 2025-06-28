@@ -1,0 +1,551 @@
+get:
+  tags:
+    - Treasure
+  summary: 獲取寶箱列表
+  description: 獲取指定房間內的寶箱列表
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: roomId
+      in: query
+      description: 房間 ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: page
+      in: query
+      description: 頁碼
+      required: false
+      schema:
+        type: integer
+        default: 1
+    - name: limit
+      in: query
+      description: 每頁數量
+      required: false
+      schema:
+        type: integer
+        default: 10
+  responses:
+    "200":
+      description: 成功獲取寶箱列表
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    type:
+                      type: string
+                      enum: [config, secret, backup, log]
+                    description:
+                      type: string
+                    status:
+                      type: string
+                      enum: [locked, unlocked, expired]
+                    createdAt:
+                      type: string
+                      format: date-time
+                    lastAccessed:
+                      type: string
+                      format: date-time
+              $ref: "#/components/schemas/Pagination"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+post:
+  tags:
+    - Treasure
+  summary: 創建寶箱
+  description: 在指定房間內創建新的寶箱
+  security:
+    - BearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - roomId
+            - name
+            - type
+          properties:
+            roomId:
+              type: string
+              format: uuid
+              description: 房間 ID
+            name:
+              type: string
+              description: 寶箱名稱
+              example: "數據庫配置"
+            type:
+              type: string
+              enum: [config, secret, backup, log]
+              description: 寶箱類型
+              example: "config"
+            description:
+              type: string
+              description: 寶箱描述
+              example: "包含數據庫連接配置"
+            status:
+              type: string
+              enum: [locked, unlocked, expired]
+              description: 寶箱狀態
+              example: "locked"
+            settings:
+              type: object
+              properties:
+                encryptionEnabled:
+                  type: boolean
+                  description: 是否啟用加密
+                accessControl:
+                  type: object
+                  properties:
+                    allowedRoles:
+                      type: array
+                      items:
+                        type: string
+                    allowedUsers:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                retentionPolicy:
+                  type: object
+                  properties:
+                    maxAge:
+                      type: integer
+                      description: 最大保留時間（天）
+                    maxSize:
+                      type: integer
+                      description: 最大大小（MB）
+  responses:
+    "201":
+      description: 寶箱創建成功
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              type:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              settings:
+                type: object
+    "400":
+      description: 無效的請求
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+/{id}:
+  put:
+    tags:
+      - Treasure
+    summary: 更新寶箱
+    description: 更新指定寶箱的信息
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 寶箱名稱
+              description:
+                type: string
+                description: 寶箱描述
+              status:
+                type: string
+                enum: [locked, unlocked, expired]
+                description: 寶箱狀態
+              settings:
+                type: object
+                properties:
+                  encryptionEnabled:
+                    type: boolean
+                  accessControl:
+                    type: object
+                    properties:
+                      allowedRoles:
+                        type: array
+                        items:
+                          type: string
+                      allowedUsers:
+                        type: array
+                        items:
+                          type: string
+                          format: uuid
+                  retentionPolicy:
+                    type: object
+                    properties:
+                      maxAge:
+                        type: integer
+                      maxSize:
+                        type: integer
+    responses:
+      "200":
+        description: 寶箱更新成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                type:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                updatedAt:
+                  type: string
+                  format: date-time
+                settings:
+                  type: object
+      "400":
+        description: 無效的請求
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 寶箱不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  delete:
+    tags:
+      - Treasure
+    summary: 刪除寶箱
+    description: 刪除指定的寶箱
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "204":
+        description: 寶箱刪除成功
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 寶箱不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  /content:
+    get:
+      tags:
+        - Treasure
+      summary: 獲取寶箱內容
+      description: 獲取指定寶箱的內容
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 成功獲取寶箱內容
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  content:
+                    type: object
+                    description: 寶箱內容
+                  metadata:
+                    type: object
+                    properties:
+                      contentType:
+                        type: string
+                      size:
+                        type: integer
+                      lastModified:
+                        type: string
+                        format: date-time
+                      checksum:
+                        type: string
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 寶箱不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - Treasure
+      summary: 更新寶箱內容
+      description: 更新指定寶箱的內容
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: object
+                  description: 寶箱內容
+                metadata:
+                  type: object
+                  properties:
+                    contentType:
+                      type: string
+                    checksum:
+                      type: string
+      responses:
+        "200":
+          description: 寶箱內容更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  updatedAt:
+                    type: string
+                    format: date-time
+                  metadata:
+                    type: object
+        "400":
+          description: 無效的請求
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 寶箱不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /access-logs:
+    get:
+      tags:
+        - Treasure
+      summary: 獲取寶箱訪問日誌
+      description: 獲取指定寶箱的訪問日誌
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startTime
+          in: query
+          description: 開始時間
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          description: 結束時間
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          description: 頁碼
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每頁數量
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: 成功獲取訪問日誌
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        userId:
+                          type: string
+                          format: uuid
+                        action:
+                          type: string
+                          enum: [read, write, delete]
+                        timestamp:
+                          type: string
+                          format: date-time
+                        ipAddress:
+                          type: string
+                        userAgent:
+                          type: string
+                  $ref: "#/components/schemas/Pagination"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 寶箱不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

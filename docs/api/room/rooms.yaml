@@ -1,0 +1,426 @@
+get:
+  tags:
+    - Room
+  summary: 獲取房間列表
+  description: 獲取指定區域下的房間列表
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: zoneId
+      in: query
+      description: 區域 ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: page
+      in: query
+      description: 頁碼
+      required: false
+      schema:
+        type: integer
+        default: 1
+    - name: limit
+      in: query
+      description: 每頁數量
+      required: false
+      schema:
+        type: integer
+        default: 10
+  responses:
+    "200":
+      description: 成功獲取房間列表
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        [
+                          server,
+                          database,
+                          application,
+                          network,
+                          storage,
+                          security,
+                        ]
+                    description:
+                      type: string
+                    status:
+                      type: string
+                      enum: [active, maintenance, offline]
+                    createdAt:
+                      type: string
+                      format: date-time
+                    guardianCount:
+                      type: integer
+                    treasureCount:
+                      type: integer
+              $ref: "#/components/schemas/Pagination"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+post:
+  tags:
+    - Room
+  summary: 創建房間
+  description: 在指定區域下創建新的房間
+  security:
+    - BearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - zoneId
+            - name
+            - type
+          properties:
+            zoneId:
+              type: string
+              format: uuid
+              description: 區域 ID
+            name:
+              type: string
+              description: 房間名稱
+              example: "Web 服務器"
+            type:
+              type: string
+              enum: [server, database, application, network, storage, security]
+              description: 房間類型
+              example: "server"
+            description:
+              type: string
+              description: 房間描述
+              example: "處理 Web 請求的服務器"
+            status:
+              type: string
+              enum: [active, maintenance, offline]
+              description: 房間狀態
+              example: "active"
+            settings:
+              type: object
+              properties:
+                maxConnections:
+                  type: integer
+                  description: 最大連接數
+                monitoringEnabled:
+                  type: boolean
+                  description: 是否啟用監控
+                backupEnabled:
+                  type: boolean
+                  description: 是否啟用備份
+  responses:
+    "201":
+      description: 房間創建成功
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              type:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              settings:
+                type: object
+    "400":
+      description: 無效的請求
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+/{id}:
+  put:
+    tags:
+      - Room
+    summary: 更新房間
+    description: 更新指定房間的信息
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 房間名稱
+              description:
+                type: string
+                description: 房間描述
+              status:
+                type: string
+                enum: [active, maintenance, offline]
+                description: 房間狀態
+              settings:
+                type: object
+                properties:
+                  maxConnections:
+                    type: integer
+                  monitoringEnabled:
+                    type: boolean
+                  backupEnabled:
+                    type: boolean
+    responses:
+      "200":
+        description: 房間更新成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                type:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                updatedAt:
+                  type: string
+                  format: date-time
+                settings:
+                  type: object
+      "400":
+        description: 無效的請求
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 房間不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  delete:
+    tags:
+      - Room
+    summary: 刪除房間
+    description: 刪除指定的房間
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "204":
+        description: 房間刪除成功
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 房間不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  /guardians:
+    get:
+      tags:
+        - Room
+      summary: 獲取房間內的守護者列表
+      description: 獲取指定房間內的所有守護者
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: 頁碼
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每頁數量
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: 成功獲取守護者列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Guardian"
+                  $ref: "#/components/schemas/Pagination"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 房間不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /treasures:
+    get:
+      tags:
+        - Room
+      summary: 獲取房間內的寶箱列表
+      description: 獲取指定房間內的所有寶箱
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: 頁碼
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每頁數量
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: 成功獲取寶箱列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Treasure"
+                  $ref: "#/components/schemas/Pagination"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 房間不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

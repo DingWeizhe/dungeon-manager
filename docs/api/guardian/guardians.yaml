@@ -1,0 +1,497 @@
+get:
+  tags:
+    - Guardian
+  summary: 獲取守護者列表
+  description: 獲取指定房間內的守護者列表
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: roomId
+      in: query
+      description: 房間 ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: page
+      in: query
+      description: 頁碼
+      required: false
+      schema:
+        type: integer
+        default: 1
+    - name: limit
+      in: query
+      description: 每頁數量
+      required: false
+      schema:
+        type: integer
+        default: 10
+  responses:
+    "200":
+      description: 成功獲取守護者列表
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    type:
+                      type: string
+                      enum: [firewall, antivirus, ids, waf, vpn]
+                    description:
+                      type: string
+                    status:
+                      type: string
+                      enum: [active, inactive, blocked]
+                    createdAt:
+                      type: string
+                      format: date-time
+                    lastActive:
+                      type: string
+                      format: date-time
+              $ref: "#/components/schemas/Pagination"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+post:
+  tags:
+    - Guardian
+  summary: 創建守護者
+  description: 在指定房間內創建新的守護者
+  security:
+    - BearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - roomId
+            - name
+            - type
+          properties:
+            roomId:
+              type: string
+              format: uuid
+              description: 房間 ID
+            name:
+              type: string
+              description: 守護者名稱
+              example: "Web 應用防火牆"
+            type:
+              type: string
+              enum: [firewall, antivirus, ids, waf, vpn]
+              description: 守護者類型
+              example: "waf"
+            description:
+              type: string
+              description: 守護者描述
+              example: "保護 Web 應用免受攻擊"
+            status:
+              type: string
+              enum: [active, inactive, blocked]
+              description: 守護者狀態
+              example: "active"
+            settings:
+              type: object
+              properties:
+                rules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      action:
+                        type: string
+                        enum: [allow, deny, log]
+                      conditions:
+                        type: object
+                monitoringEnabled:
+                  type: boolean
+                  description: 是否啟用監控
+                alertEnabled:
+                  type: boolean
+                  description: 是否啟用告警
+  responses:
+    "201":
+      description: 守護者創建成功
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              type:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              settings:
+                type: object
+    "400":
+      description: 無效的請求
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+/{id}:
+  put:
+    tags:
+      - Guardian
+    summary: 更新守護者
+    description: 更新指定守護者的信息
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 守護者名稱
+              description:
+                type: string
+                description: 守護者描述
+              status:
+                type: string
+                enum: [active, inactive, blocked]
+                description: 守護者狀態
+              settings:
+                type: object
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        action:
+                          type: string
+                          enum: [allow, deny, log]
+                        conditions:
+                          type: object
+                  monitoringEnabled:
+                    type: boolean
+                  alertEnabled:
+                    type: boolean
+    responses:
+      "200":
+        description: 守護者更新成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                type:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                updatedAt:
+                  type: string
+                  format: date-time
+                settings:
+                  type: object
+      "400":
+        description: 無效的請求
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 守護者不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  delete:
+    tags:
+      - Guardian
+    summary: 刪除守護者
+    description: 刪除指定的守護者
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "204":
+        description: 守護者刪除成功
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 守護者不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  /logs:
+    get:
+      tags:
+        - Guardian
+      summary: 獲取守護者日誌
+      description: 獲取指定守護者的操作日誌
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startTime
+          in: query
+          description: 開始時間
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          description: 結束時間
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: level
+          in: query
+          description: 日誌級別
+          required: false
+          schema:
+            type: string
+            enum: [info, warning, error]
+        - name: page
+          in: query
+          description: 頁碼
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每頁數量
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: 成功獲取日誌
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        timestamp:
+                          type: string
+                          format: date-time
+                        level:
+                          type: string
+                          enum: [info, warning, error]
+                        message:
+                          type: string
+                        details:
+                          type: object
+                  $ref: "#/components/schemas/Pagination"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 守護者不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /stats:
+    get:
+      tags:
+        - Guardian
+      summary: 獲取守護者統計數據
+      description: 獲取指定守護者的運行統計數據
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startTime
+          in: query
+          description: 開始時間
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          description: 結束時間
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: 成功獲取統計數據
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalRequests:
+                    type: integer
+                    description: 總請求數
+                  blockedRequests:
+                    type: integer
+                    description: 被阻止的請求數
+                  allowedRequests:
+                    type: integer
+                    description: 允許的請求數
+                  averageResponseTime:
+                    type: number
+                    format: float
+                    description: 平均響應時間（毫秒）
+                  cpuUsage:
+                    type: number
+                    format: float
+                    description: CPU 使用率（百分比）
+                  memoryUsage:
+                    type: number
+                    format: float
+                    description: 內存使用率（百分比）
+                  alerts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        level:
+                          type: string
+                          enum: [info, warning, error]
+                        count:
+                          type: integer
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 守護者不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

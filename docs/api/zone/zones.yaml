@@ -1,0 +1,582 @@
+get:
+  tags:
+    - Zone
+  summary: 獲取區域列表
+  description: 獲取指定組織下的區域列表
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: organizationId
+      in: query
+      description: 組織 ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: page
+      in: query
+      description: 頁碼
+      required: false
+      schema:
+        type: integer
+        default: 1
+    - name: limit
+      in: query
+      description: 每頁數量
+      required: false
+      schema:
+        type: integer
+        default: 10
+  responses:
+    "200":
+      description: 成功獲取區域列表
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        [
+                          public,
+                          internal,
+                          container,
+                          external,
+                          development,
+                          testing,
+                          production,
+                        ]
+                    description:
+                      type: string
+                    securityLevel:
+                      type: integer
+                      minimum: 1
+                      maximum: 5
+                    createdAt:
+                      type: string
+                      format: date-time
+                    roomCount:
+                      type: integer
+              $ref: "#/components/schemas/Pagination"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+post:
+  tags:
+    - Zone
+  summary: 創建區域
+  description: 在指定組織下創建新的區域
+  security:
+    - BearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - organizationId
+            - name
+            - type
+          properties:
+            organizationId:
+              type: string
+              format: uuid
+              description: 組織 ID
+            name:
+              type: string
+              description: 區域名稱
+              example: "外部網路區"
+            type:
+              type: string
+              enum:
+                [
+                  public,
+                  internal,
+                  container,
+                  external,
+                  development,
+                  testing,
+                  production,
+                ]
+              description: 區域類型
+              example: "public"
+            description:
+              type: string
+              description: 區域描述
+              example: "用於外部網路訪問的區域"
+            securityLevel:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: 安全等級
+              example: 1
+            settings:
+              type: object
+              properties:
+                allowedIPs:
+                  type: array
+                  items:
+                    type: string
+                  description: 允許的 IP 地址列表
+                maxConnections:
+                  type: integer
+                  description: 最大連接數
+                monitoringEnabled:
+                  type: boolean
+                  description: 是否啟用監控
+  responses:
+    "201":
+      description: 區域創建成功
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              type:
+                type: string
+              description:
+                type: string
+              securityLevel:
+                type: integer
+              createdAt:
+                type: string
+                format: date-time
+              settings:
+                type: object
+    "400":
+      description: 無效的請求
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "401":
+      description: 未認證
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "403":
+      description: 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+/{id}:
+  put:
+    tags:
+      - Zone
+    summary: 更新區域
+    description: 更新指定區域的信息
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 區域名稱
+              description:
+                type: string
+                description: 區域描述
+              securityLevel:
+                type: integer
+                minimum: 1
+                maximum: 5
+                description: 安全等級
+              settings:
+                type: object
+                properties:
+                  allowedIPs:
+                    type: array
+                    items:
+                      type: string
+                  maxConnections:
+                    type: integer
+                  monitoringEnabled:
+                    type: boolean
+    responses:
+      "200":
+        description: 區域更新成功
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                type:
+                  type: string
+                description:
+                  type: string
+                securityLevel:
+                  type: integer
+                updatedAt:
+                  type: string
+                  format: date-time
+                settings:
+                  type: object
+      "400":
+        description: 無效的請求
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 區域不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  delete:
+    tags:
+      - Zone
+    summary: 刪除區域
+    description: 刪除指定的區域
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "204":
+        description: 區域刪除成功
+      "401":
+        description: 未認證
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "403":
+        description: 權限不足
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "404":
+        description: 區域不存在
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  /rooms:
+    get:
+      tags:
+        - Zone
+      summary: 獲取區域內的房間列表
+      description: 獲取指定區域內的所有房間
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: 頁碼
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每頁數量
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: 成功獲取房間列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Room"
+                  $ref: "#/components/schemas/Pagination"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 區域不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /connections:
+    get:
+      tags:
+        - Zone
+      summary: 獲取區域間的連接
+      description: 獲取指定區域與其他區域的連接關係
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 成功獲取連接列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    sourceZoneId:
+                      type: string
+                      format: uuid
+                    targetZoneId:
+                      type: string
+                      format: uuid
+                    type:
+                      type: string
+                      enum: [direct, gateway, tunnel]
+                    status:
+                      type: string
+                      enum: [active, inactive, blocked]
+                    createdAt:
+                      type: string
+                      format: date-time
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 區域不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      tags:
+        - Zone
+      summary: 創建區域連接
+      description: 創建指定區域與其他區域的連接
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - targetZoneId
+                - type
+              properties:
+                targetZoneId:
+                  type: string
+                  format: uuid
+                  description: 目標區域 ID
+                type:
+                  type: string
+                  enum: [direct, gateway, tunnel]
+                  description: 連接類型
+                settings:
+                  type: object
+                  properties:
+                    maxBandwidth:
+                      type: integer
+                      description: 最大帶寬（Mbps）
+                    encryption:
+                      type: boolean
+                      description: 是否加密
+                    allowedProtocols:
+                      type: array
+                      items:
+                        type: string
+                      description: 允許的協議
+      responses:
+        "201":
+          description: 連接創建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  sourceZoneId:
+                    type: string
+                    format: uuid
+                  targetZoneId:
+                    type: string
+                    format: uuid
+                  type:
+                    type: string
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+                  settings:
+                    type: object
+        "400":
+          description: 無效的請求
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: 未認證
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 區域不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    /{connectionId}:
+      delete:
+        tags:
+          - Zone
+        summary: 刪除區域連接
+        description: 刪除指定區域間的連接
+        security:
+          - BearerAuth: []
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+              format: uuid
+          - name: connectionId
+            in: path
+            required: true
+            schema:
+              type: string
+              format: uuid
+        responses:
+          "204":
+            description: 連接刪除成功
+          "401":
+            description: 未認證
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+          "403":
+            description: 權限不足
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+          "404":
+            description: 區域或連接不存在
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
