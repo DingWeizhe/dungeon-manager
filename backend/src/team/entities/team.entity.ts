@@ -2,14 +2,16 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Environment } from '../../environment/entities/environment.entity';
+import { Administrator } from '../../administrator/entities/administrator.entity';
+import { Credential } from '../../credential/entities/credential.entity';
 
 @Entity()
-export class Organization {
+export class Team {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -28,6 +30,11 @@ export class Organization {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Environment, (environment) => environment.organization)
-  environments: Environment[];
+  @ManyToMany(() => Administrator)
+  @JoinTable()
+  members: Administrator[];
+
+  @ManyToMany(() => Credential)
+  @JoinTable()
+  sharedCredentials: Credential[];
 }
