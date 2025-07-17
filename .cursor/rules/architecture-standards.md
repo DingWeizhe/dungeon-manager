@@ -6,49 +6,42 @@
 
 ```
 System Manager
-├── Frontend (Vue 3)
-│   ├── 表示層
-│   ├── 狀態管理
-│   └── API 介面
+├── Frontend (Angular 20)
 ├── Backend (NestJS)
-│   ├── API 層
-│   ├── 業務邏輯層
-│   └── 數據訪問層
 └── Database (PostgreSQL)
 ```
 
 ### 1.2 技術棧選擇
 
-- 前端：Vue 3 + TypeScript + Vite
+- 前端：Angular 20
 - 後端：NestJS + TypeScript
 - 數據庫：PostgreSQL
-- API 文檔：OpenAPI/Swagger
-- 測試：Jest + Cypress
+- 測試：Jest + Playwright
 - CI/CD：GitHub Actions
 
 ## 2. 模組設計
 
 ### 2.1 核心模組
 
-- **Environment（環境）模組**
+- **Environment**
 
-  - 環境配置管理
-  - 環境狀態監控
-  - 環境間連接管理
+  遊戲化詞彙: 伺服器
+  猶如線上遊戲中，玩家可以登入到不同的伺服器，並在每個伺服器中有不同的地下城(Service)。
 
-- **Service（服務）模組**
+  使用者(User)可以建立自己的伺服器，並在伺服器中有不同的地下城(Service)。
+  同時也可以邀請其他使用者加入自己的伺服器，定設定相對應的權限。
 
-  - 服務生命週期管理
-  - 服務配置管理
-  - 服務監控和日誌
+- **Service**
 
-- **Administrator（管理員）模組**
+  遊戲化詞彙: 地下城
+  猶如線上遊戲中，有不同的地下城，地下城中有對應的任務(issue)、怪物(incident)、寶箱(artifact)、鑰匙(credential)等。
 
-  - 管理員帳號管理
-  - 權限控制
-  - 操作審計
+- **Administrator**
 
-- **Credential（憑證）模組**
+  遊戲化詞彙: GM
+  猶如線上遊戲中，有 GM 可以管理伺服器、地下城、玩家等。
+
+- **Credential**
 
   - 敏感信息管理
   - 加密存儲
